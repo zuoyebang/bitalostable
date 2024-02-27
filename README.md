@@ -1,4 +1,4 @@
-### Bitalostable
+![bitalos](./docs/bitalos.png)
 
 ## Introduction
 
