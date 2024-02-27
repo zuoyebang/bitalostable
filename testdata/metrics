@@ -1,0 +1,188 @@
+batch
+set a 1
+----
+
+iter-new a
+----
+
+flush
+----
+0.0:
+  000005:[a#1,SET-a#1,SET]
+
+# iter b references both a memtable and sstable 5.
+
+iter-new b
+----
+
+metrics
+----
+__level_____count____size___score______in__ingest(sz_cnt)____move(sz_cnt)___write(sz_cnt)____read___r-amp___w-amp
+    WAL         1    28 B       -    17 B       -       -       -       -    56 B       -       -       -     3.3
+      0         1   771 B    0.25    28 B     0 B       0     0 B       0   771 B       1     0 B       1    27.5
+      1         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      2         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      3         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      4         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      5         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      6         0     0 B       -     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+  total         1   771 B       -    56 B     0 B       0     0 B       0   827 B       1     0 B       1    14.8
+  flush         1
+compact         0     0 B     0 B       0          (size == estimated-debt, score = in-progress-bytes, in = num-in-progress)
+  ctype         0       0       0       0       0       0       0  (default, delete, elision, move, read, rewrite, multi-level)
+ memtbl         1   256 K
+zmemtbl         1   256 K
+   ztbl         0     0 B
+ bcache         4   698 B    0.0%  (score == hit-rate)
+ tcache         1   680 B    0.0%  (score == hit-rate)
+  snaps         0       -       0  (score == earliest seq num)
+ titers         1
+ filter         -       -    0.0%  (score == utility)
+
+disk-usage
+----
+2.0 K
+
+batch
+set b 2
+----
+
+flush
+----
+0.0:
+  000005:[a#1,SET-a#1,SET]
+  000007:[b#2,SET-b#2,SET]
+
+# iter c references both a memtable and sstables 5 and 7.
+
+iter-new c
+----
+
+compact a-z
+----
+6:
+  000008:[a#0,SET-b#0,SET]
+
+metrics
+----
+__level_____count____size___score______in__ingest(sz_cnt)____move(sz_cnt)___write(sz_cnt)____read___r-amp___w-amp
+    WAL         1    28 B       -    34 B       -       -       -       -    84 B       -       -       -     2.5
+      0         0     0 B    0.00    56 B     0 B       0     0 B       0   1.5 K       2     0 B       0    27.5
+      1         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      2         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      3         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      4         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      5         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      6         1   778 B       -   1.5 K     0 B       0     0 B       0   778 B       1   1.5 K       1     0.5
+  total         1   778 B       -    84 B     0 B       0     0 B       0   2.3 K       3   1.5 K       1    28.6
+  flush         2
+compact         1     0 B     0 B       0          (size == estimated-debt, score = in-progress-bytes, in = num-in-progress)
+  ctype         1       0       0       0       0       0       0  (default, delete, elision, move, read, rewrite, multi-level)
+ memtbl         1   256 K
+zmemtbl         2   512 K
+   ztbl         2   1.5 K
+ bcache         8   1.4 K   42.9%  (score == hit-rate)
+ tcache         2   1.3 K   66.7%  (score == hit-rate)
+  snaps         0       -       0  (score == earliest seq num)
+ titers         2
+ filter         -       -    0.0%  (score == utility)
+
+disk-usage
+----
+3.6 K
+
+# Closing iter a will release one of the zombie memtables.
+
+iter-close a
+----
+
+metrics
+----
+__level_____count____size___score______in__ingest(sz_cnt)____move(sz_cnt)___write(sz_cnt)____read___r-amp___w-amp
+    WAL         1    28 B       -    34 B       -       -       -       -    84 B       -       -       -     2.5
+      0         0     0 B    0.00    56 B     0 B       0     0 B       0   1.5 K       2     0 B       0    27.5
+      1         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      2         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      3         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      4         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      5         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      6         1   778 B       -   1.5 K     0 B       0     0 B       0   778 B       1   1.5 K       1     0.5
+  total         1   778 B       -    84 B     0 B       0     0 B       0   2.3 K       3   1.5 K       1    28.6
+  flush         2
+compact         1     0 B     0 B       0          (size == estimated-debt, score = in-progress-bytes, in = num-in-progress)
+  ctype         1       0       0       0       0       0       0  (default, delete, elision, move, read, rewrite, multi-level)
+ memtbl         1   256 K
+zmemtbl         1   256 K
+   ztbl         2   1.5 K
+ bcache         8   1.4 K   42.9%  (score == hit-rate)
+ tcache         2   1.3 K   66.7%  (score == hit-rate)
+  snaps         0       -       0  (score == earliest seq num)
+ titers         2
+ filter         -       -    0.0%  (score == utility)
+
+# Closing iter c will release one of the zombie sstables. The other
+# zombie sstable is still referenced by iter b.
+
+iter-close c
+----
+
+metrics
+----
+__level_____count____size___score______in__ingest(sz_cnt)____move(sz_cnt)___write(sz_cnt)____read___r-amp___w-amp
+    WAL         1    28 B       -    34 B       -       -       -       -    84 B       -       -       -     2.5
+      0         0     0 B    0.00    56 B     0 B       0     0 B       0   1.5 K       2     0 B       0    27.5
+      1         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      2         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      3         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      4         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      5         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      6         1   778 B       -   1.5 K     0 B       0     0 B       0   778 B       1   1.5 K       1     0.5
+  total         1   778 B       -    84 B     0 B       0     0 B       0   2.3 K       3   1.5 K       1    28.6
+  flush         2
+compact         1     0 B     0 B       0          (size == estimated-debt, score = in-progress-bytes, in = num-in-progress)
+  ctype         1       0       0       0       0       0       0  (default, delete, elision, move, read, rewrite, multi-level)
+ memtbl         1   256 K
+zmemtbl         1   256 K
+   ztbl         1   771 B
+ bcache         4   698 B   42.9%  (score == hit-rate)
+ tcache         1   680 B   66.7%  (score == hit-rate)
+  snaps         0       -       0  (score == earliest seq num)
+ titers         1
+ filter         -       -    0.0%  (score == utility)
+
+disk-usage
+----
+2.8 K
+
+# Closing iter b will release the last zombie sstable and the last zombie memtable.
+
+iter-close b
+----
+
+metrics
+----
+__level_____count____size___score______in__ingest(sz_cnt)____move(sz_cnt)___write(sz_cnt)____read___r-amp___w-amp
+    WAL         1    28 B       -    34 B       -       -       -       -    84 B       -       -       -     2.5
+      0         0     0 B    0.00    56 B     0 B       0     0 B       0   1.5 K       2     0 B       0    27.5
+      1         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      2         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      3         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      4         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      5         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      6         1   778 B       -   1.5 K     0 B       0     0 B       0   778 B       1   1.5 K       1     0.5
+  total         1   778 B       -    84 B     0 B       0     0 B       0   2.3 K       3   1.5 K       1    28.6
+  flush         2
+compact         1     0 B     0 B       0          (size == estimated-debt, score = in-progress-bytes, in = num-in-progress)
+  ctype         1       0       0       0       0       0       0  (default, delete, elision, move, read, rewrite, multi-level)
+ memtbl         1   256 K
+zmemtbl         0     0 B
+   ztbl         0     0 B
+ bcache         0     0 B   42.9%  (score == hit-rate)
+ tcache         0     0 B   66.7%  (score == hit-rate)
+  snaps         0       -       0  (score == earliest seq num)
+ titers         0
+ filter         -       -    0.0%  (score == utility)
+
+disk-usage
+----
+2.1 K

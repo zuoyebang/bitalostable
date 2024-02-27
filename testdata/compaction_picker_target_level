@@ -1,0 +1,328 @@
+init 1
+----
+
+init_cp
+----
+base: 6
+
+queue
+----
+
+init 1
+6: 1
+----
+
+init_cp
+----
+base: 6
+
+queue
+----
+
+init 1
+6: 1000000
+----
+
+init_cp
+----
+base: 1
+
+queue
+----
+
+init 1
+5: 1
+6: 10
+----
+
+init_cp
+----
+base: 5
+
+queue
+----
+L5->L6: 1.0
+
+init 1
+5: 2
+6: 10
+----
+
+init_cp
+----
+base: 5
+
+queue
+----
+L5->L6: 2.2
+
+# Smoothing multiplier is
+# `(size(Lbottom)/size(Lbase))^(Lbottom-Lbase) = (30/1)^(1/(6-4)) = 30^(1/2)`
+#
+# size(L4) = size(Lbase) = 1
+# size(L5) = size(L4) * 30^(1/2) ~= 5
+# size(L6) = size(L5) * 30^(1/2) = 30
+
+init 1
+5: 2
+6: 30
+----
+
+init_cp
+----
+base: 4
+
+queue
+----
+
+init 1
+4: 2
+5: 2
+6: 100
+----
+
+init_cp
+----
+base: 4
+
+queue
+----
+L4->L5: 10.0
+
+init 1
+4: 1
+5: 2
+6: 100
+----
+
+init_cp
+----
+base: 4
+
+queue
+----
+L4->L5: 5.0
+
+init 1
+4: 1
+5: 11
+6: 100
+----
+
+init_cp
+----
+base: 4
+
+queue
+----
+L5->L6: 1.1
+
+init 1
+4: 2
+5: 11
+6: 100
+----
+
+init_cp
+----
+base: 4
+
+queue
+----
+L4->L5: 1.8
+
+init 1
+0: 4
+----
+
+init_cp
+----
+base: 6
+
+queue
+----
+L0->L6: 200.0
+
+init 1
+0: 5
+----
+
+init_cp
+----
+base: 6
+
+queue
+----
+L0->L6: 250.0
+
+init 1
+0: 5
+5: 2
+6: 10
+----
+
+init_cp
+----
+base: 5
+
+queue
+----
+L5->L6: 3.2
+
+pick
+----
+L5->L6: 3.2
+
+pick ongoing=(5,6)
+----
+no compaction
+
+init 1
+0: 10
+4: 10
+5: 6
+6: 10
+----
+
+init_cp
+----
+base: 4
+
+queue
+----
+L4->L5: 10.0
+L4->L5: 7.7
+
+pick ongoing=(5,6)
+----
+no compaction
+
+pick ongoing=(0,4)
+----
+L5->L6: 3.3
+
+pick ongoing=(0,0,0,4)
+----
+no compaction
+
+init_cp
+----
+base: 4
+
+pick ongoing=(0,5)
+----
+no compaction
+
+init 1
+0: 20
+6: 10
+----
+
+init_cp ongoing=(0,5)
+----
+base: 4
+
+queue
+----
+L0->L4: 1000.0
+
+pick
+----
+L0->L4: 1000.0
+
+pick ongoing=(0,4)
+----
+no compaction
+
+# We'll only pick a concurrent compaction if it is "high" priority
+# (i.e. has a score >= highPriorityThreshold).
+
+init 1
+0: 20
+5: 1
+6: 10
+----
+
+init_cp ongoing=(0,4)
+----
+base: 4
+
+queue
+----
+L0->L4: 1000.0
+
+pick ongoing=(0,4,4,5)
+----
+no compaction
+
+pick ongoing=(4,5)
+----
+L0->L4: 1000.0
+
+# Verify we can start concurrent Ln->Ln+1 compactions given sufficient
+# priority.
+
+init 1
+5: 4
+6: 10
+----
+
+init_cp
+----
+base: 5
+
+queue
+----
+L5->L6: 5.2
+
+pick
+----
+L5->L6: 5.2
+
+pick ongoing=(5,6)
+----
+no compaction
+
+# Verify that successive manual compactions interleaved with an automatic
+# compaction does not trigger an error.
+
+init 5
+0: 10
+5: 10
+6: 5
+----
+
+init_cp
+----
+base: 5
+
+queue
+----
+L5->L6: 9.2
+L5->L6: 6.9
+
+pick_manual level=0 start=0 end=12
+----
+L0->L5, retryLater = false
+
+pick
+----
+L5->L6: 9.2
+
+# Assume the above two compactions (one manual L0 -> L5 and one automatic
+# L5 -> L6) have run, and Lbase = L6 now, but the manual compaction code is
+# still going to try running a manual compaction from L5 -> L6 since L5 was the
+# output of the last manual compaction. No compaction should be picked.
+
+init 5
+0: 7
+6: 5
+----
+
+init_cp
+----
+base: 5
+
+pick_manual level=5 start=0 end=12
+----
+nil, retryLater = false

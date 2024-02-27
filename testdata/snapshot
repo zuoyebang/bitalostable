@@ -1,0 +1,151 @@
+define
+set a 1
+snapshot 1
+set b 2
+snapshot 2
+set c 3
+snapshot 3
+----
+
+iter snapshot=1
+first
+next
+prev
+----
+a:1
+.
+a:1
+
+iter snapshot=2
+first
+next
+next
+prev
+----
+a:1
+b:2
+.
+b:2
+
+iter snapshot=3
+first
+next
+next
+next
+prev
+----
+a:1
+b:2
+c:3
+.
+c:3
+
+define
+set a 1
+snapshot 1
+set a 2
+snapshot 2
+set a 3
+snapshot 3
+----
+
+iter snapshot=1
+first
+next
+prev
+----
+a:1
+.
+a:1
+
+iter snapshot=2
+first
+next
+prev
+----
+a:2
+.
+a:2
+
+iter snapshot=3
+first
+next
+prev
+----
+a:3
+.
+a:3
+
+define
+set a 1
+snapshot 1
+set a 2
+snapshot 2
+set a 3
+snapshot 3
+compact a-b
+----
+
+iter snapshot=1
+first
+next
+prev
+----
+a:1
+.
+a:1
+
+iter snapshot=2
+first
+next
+prev
+----
+a:2
+.
+a:2
+
+iter snapshot=3
+first
+next
+prev
+----
+a:3
+.
+a:3
+
+define
+merge a 1
+snapshot 1
+merge a 2
+snapshot 2
+merge a 3
+snapshot 3
+compact a-b
+----
+
+iter snapshot=1
+first
+next
+prev
+----
+a:1
+.
+a:1
+
+iter snapshot=2
+first
+next
+prev
+----
+a:12
+.
+a:12
+
+iter snapshot=3
+first
+next
+prev
+----
+a:123
+.
+a:123

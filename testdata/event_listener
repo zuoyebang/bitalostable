@@ -1,0 +1,267 @@
+open
+----
+mkdir-all: db 0755
+open-dir: db
+mkdir-all: wal 0755
+open-dir: wal
+lock: db/LOCK
+open-dir: db
+open-dir: db
+create: db/MANIFEST-000001
+sync: db/MANIFEST-000001
+create: db/temporary.000001.dbtmp
+sync: db/temporary.000001.dbtmp
+close: db/temporary.000001.dbtmp
+rename: db/temporary.000001.dbtmp -> db/CURRENT
+sync: db
+[JOB 1] MANIFEST created 000001
+create: db/marker.manifest.000001.MANIFEST-000001
+close: db/marker.manifest.000001.MANIFEST-000001
+sync: db
+create: db/marker.format-version.000001.002
+close: db/marker.format-version.000001.002
+sync: db
+upgraded to format version: 002
+create: db/temporary.000000.dbtmp
+sync: db/temporary.000000.dbtmp
+close: db/temporary.000000.dbtmp
+rename: db/temporary.000000.dbtmp -> db/CURRENT
+create: db/marker.format-version.000002.003
+close: db/marker.format-version.000002.003
+sync: db
+upgraded to format version: 003
+create: db/marker.format-version.000003.004
+close: db/marker.format-version.000003.004
+sync: db
+upgraded to format version: 004
+create: db/marker.format-version.000004.005
+close: db/marker.format-version.000004.005
+sync: db
+upgraded to format version: 005
+create: db/marker.format-version.000005.006
+close: db/marker.format-version.000005.006
+sync: db
+upgraded to format version: 006
+create: db/marker.format-version.000006.007
+close: db/marker.format-version.000006.007
+sync: db
+upgraded to format version: 007
+create: db/marker.format-version.000007.008
+close: db/marker.format-version.000007.008
+sync: db
+upgraded to format version: 008
+create: db/marker.format-version.000008.009
+close: db/marker.format-version.000008.009
+sync: db
+upgraded to format version: 009
+create: db/marker.format-version.000009.010
+close: db/marker.format-version.000009.010
+sync: db
+upgraded to format version: 010
+create: db/marker.format-version.000010.011
+close: db/marker.format-version.000010.011
+sync: db
+upgraded to format version: 011
+create: db/MANIFEST-000003
+close: db/MANIFEST-000001
+sync: db/MANIFEST-000003
+create: db/marker.manifest.000002.MANIFEST-000003
+close: db/marker.manifest.000002.MANIFEST-000003
+sync: db
+[JOB 1] MANIFEST created 000003
+create: wal/000002.log
+sync: wal
+[JOB 1] WAL created 000002
+create: db/temporary.000004.dbtmp
+sync: db/temporary.000004.dbtmp
+close: db/temporary.000004.dbtmp
+rename: db/temporary.000004.dbtmp -> db/OPTIONS-000004
+sync: db
+
+flush
+----
+sync: wal/000002.log
+sync: wal/000002.log
+close: wal/000002.log
+create: wal/000005.log
+sync: wal
+[JOB 4] WAL created 000005
+[JOB 5] flushing 1 memtable to L0
+create: db/000006.sst
+[JOB 5] flushing: sstable created 000006
+sync: db/000006.sst
+close: db/000006.sst
+sync: db
+create: db/MANIFEST-000007
+close: db/MANIFEST-000003
+sync: db/MANIFEST-000007
+create: db/marker.manifest.000003.MANIFEST-000007
+close: db/marker.manifest.000003.MANIFEST-000007
+sync: db
+[JOB 5] MANIFEST created 000007
+[JOB 5] flushed 1 memtable to L0 [000006] (770 B), in 1.0s (2.0s total), output rate 770 B/s
+[JOB 5] MANIFEST deleted 000001
+
+compact
+----
+sync: wal/000005.log
+sync: wal/000005.log
+close: wal/000005.log
+reuseForWrite: wal/000002.log -> wal/000008.log
+sync: wal
+[JOB 6] WAL created 000008 (recycled 000002)
+[JOB 7] flushing 1 memtable to L0
+create: db/000009.sst
+[JOB 7] flushing: sstable created 000009
+sync: db/000009.sst
+close: db/000009.sst
+sync: db
+create: db/MANIFEST-000010
+close: db/MANIFEST-000007
+sync: db/MANIFEST-000010
+create: db/marker.manifest.000004.MANIFEST-000010
+close: db/marker.manifest.000004.MANIFEST-000010
+sync: db
+[JOB 7] MANIFEST created 000010
+[JOB 7] flushed 1 memtable to L0 [000009] (770 B), in 1.0s (2.0s total), output rate 770 B/s
+[JOB 7] MANIFEST deleted 000003
+[JOB 8] compacting(default) L0 [000006 000009] (1.5 K) + L6 [] (0 B)
+create: db/000011.sst
+[JOB 8] compacting: sstable created 000011
+sync: db/000011.sst
+close: db/000011.sst
+sync: db
+create: db/MANIFEST-000012
+close: db/MANIFEST-000010
+sync: db/MANIFEST-000012
+create: db/marker.manifest.000005.MANIFEST-000012
+close: db/marker.manifest.000005.MANIFEST-000012
+sync: db
+[JOB 8] MANIFEST created 000012
+[JOB 8] compacted(default) L0 [000006 000009] (1.5 K) + L6 [] (0 B) -> L6 [000011] (770 B), in 1.0s (2.0s total), output rate 770 B/s
+[JOB 8] sstable deleted 000006
+[JOB 8] sstable deleted 000009
+[JOB 8] MANIFEST deleted 000007
+
+disable-file-deletions
+----
+
+flush
+----
+sync: wal/000008.log
+sync: wal/000008.log
+close: wal/000008.log
+reuseForWrite: wal/000005.log -> wal/000013.log
+sync: wal
+[JOB 9] WAL created 000013 (recycled 000005)
+[JOB 10] flushing 1 memtable to L0
+create: db/000014.sst
+[JOB 10] flushing: sstable created 000014
+sync: db/000014.sst
+close: db/000014.sst
+sync: db
+create: db/MANIFEST-000015
+close: db/MANIFEST-000012
+sync: db/MANIFEST-000015
+create: db/marker.manifest.000006.MANIFEST-000015
+close: db/marker.manifest.000006.MANIFEST-000015
+sync: db
+[JOB 10] MANIFEST created 000015
+[JOB 10] flushed 1 memtable to L0 [000014] (770 B), in 1.0s (2.0s total), output rate 770 B/s
+
+enable-file-deletions
+----
+[JOB 11] MANIFEST deleted 000010
+
+ingest
+----
+link: ext/0 -> db/000016.sst
+[JOB 12] ingesting: sstable created 000016
+sync: db
+create: db/MANIFEST-000017
+close: db/MANIFEST-000015
+sync: db/MANIFEST-000017
+create: db/marker.manifest.000007.MANIFEST-000017
+close: db/marker.manifest.000007.MANIFEST-000017
+sync: db
+[JOB 12] MANIFEST created 000017
+[JOB 12] MANIFEST deleted 000012
+[JOB 12] ingested L0:000016 (825 B)
+
+metrics
+----
+__level_____count____size___score______in__ingest(sz_cnt)____move(sz_cnt)___write(sz_cnt)____read___r-amp___w-amp
+    WAL         1    27 B       -    48 B       -       -       -       -   108 B       -       -       -     2.2
+      0         2   1.6 K    0.40    81 B   825 B       1     0 B       0   2.3 K       3     0 B       2    28.5
+      1         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      2         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      3         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      4         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      5         0     0 B    0.00     0 B     0 B       0     0 B       0     0 B       0     0 B       0     0.0
+      6         1   770 B       -   1.5 K     0 B       0     0 B       0   770 B       1   1.5 K       1     0.5
+  total         3   2.3 K       -   933 B   825 B       1     0 B       0   3.9 K       4   1.5 K       3     4.3
+  flush         3
+compact         1   2.3 K     0 B       0          (size == estimated-debt, score = in-progress-bytes, in = num-in-progress)
+  ctype         1       0       0       0       0       0       0  (default, delete, elision, move, read, rewrite, multi-level)
+ memtbl         1   256 K
+zmemtbl         0     0 B
+   ztbl         0     0 B
+ bcache         8   1.4 K   11.1%  (score == hit-rate)
+ tcache         1   680 B   40.0%  (score == hit-rate)
+  snaps         0       -       0  (score == earliest seq num)
+ titers         0
+ filter         -       -    0.0%  (score == utility)
+
+sstables
+----
+0:
+  14:[a-a]
+  16:[a-a]
+6:
+  11:[a-a]
+
+checkpoint
+----
+mkdir-all: checkpoint 0755
+open-dir: 
+sync: 
+close: 
+open-dir: checkpoint
+link: db/OPTIONS-000004 -> checkpoint/OPTIONS-000004
+open-dir: checkpoint
+create: checkpoint/marker.format-version.000001.011
+sync: checkpoint/marker.format-version.000001.011
+close: checkpoint/marker.format-version.000001.011
+sync: checkpoint
+close: checkpoint
+create: checkpoint/MANIFEST-000017
+sync: checkpoint/MANIFEST-000017
+close: checkpoint/MANIFEST-000017
+open-dir: checkpoint
+create: checkpoint/marker.manifest.000001.MANIFEST-000017
+sync: checkpoint/marker.manifest.000001.MANIFEST-000017
+close: checkpoint/marker.manifest.000001.MANIFEST-000017
+sync: checkpoint
+close: checkpoint
+link: db/000014.sst -> checkpoint/000014.sst
+link: db/000016.sst -> checkpoint/000016.sst
+link: db/000011.sst -> checkpoint/000011.sst
+create: checkpoint/000013.log
+sync: checkpoint/000013.log
+close: checkpoint/000013.log
+sync: checkpoint
+close: checkpoint
+
+enable-file-deletions
+----
+bitable: file deletion disablement invariant violated
+
+close
+----
+close: db
+sync: wal/000013.log
+close: wal/000013.log
+close: db/MANIFEST-000017
+close: db
+close: db
+close: wal
