@@ -910,19 +910,11 @@ func (o *Options) EnsureDefaults() *Options {
 	if o.NumPrevManifest <= 0 {
 		o.NumPrevManifest = 1
 	}
-
 	if o.FormatMajorVersion == FormatDefault {
 		o.FormatMajorVersion = FormatMostCompatible
 	}
-
 	if o.FS == nil {
-		o.FS, o.private.fsCloser = vfs.WithDiskHealthChecks(vfs.Default, 5*time.Second,
-			func(name string, duration time.Duration) {
-				o.EventListener.DiskSlow(DiskSlowInfo{
-					Path:     name,
-					Duration: duration,
-				})
-			})
+		o.FS = vfs.Default
 	}
 	if o.FlushSplitBytes <= 0 {
 		o.FlushSplitBytes = 2 * o.Levels[0].TargetFileSize
@@ -1373,7 +1365,7 @@ func (o *Options) checkOptions(s string) (strictWALTail bool, err error) {
 		case "Options.merger":
 			// RocksDB allows the merge operator to be unspecified, in which case it
 			// shows up as "nullptr".
-			if value != "nullptr" && value != o.Merger.Name {
+			if value != "nullptr" && value != o.Merger.Name && value != "pebble.concatenate" {
 				return errors.Errorf("bitalostable: merger name from file %q != merger name from options %q",
 					errors.Safe(value), errors.Safe(o.Merger.Name))
 			}

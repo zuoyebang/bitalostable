@@ -2750,6 +2750,7 @@ func (r *Reader) readMetaindex(metaindexBH BlockHandle) error {
 		if err != nil {
 			return err
 		}
+		r.Properties.MergerName = base.DefaultMerger.Name
 	}
 
 	if bh, ok := meta[metaRangeDelV2Name]; ok {
