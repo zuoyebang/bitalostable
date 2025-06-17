@@ -947,68 +947,40 @@ func (v *Version) Overlaps(
 		selectedIndices := make([]bool, l0.Len())
 		numSelected := 0
 		var slice LevelSlice
-		for {
-			restart := false
-			for i, meta := 0, l0Iter.First(); meta != nil; i, meta = i+1, l0Iter.Next() {
-				selected := selectedIndices[i]
-				if selected {
-					continue
-				}
-				smallest := meta.Smallest.UserKey
-				largest := meta.Largest.UserKey
-				if c := cmp(largest, start); c < 0 || c == 0 && meta.Largest.IsExclusiveSentinel() {
-					// meta is completely before the specified range; skip it.
-					continue
-				}
-				if c := cmp(smallest, end); c > 0 || c == 0 && exclusiveEnd {
-					// meta is completely after the specified range; skip it.
-					continue
-				}
-				// Overlaps.
-				selectedIndices[i] = true
-				numSelected++
 
-				// Since level == 0, check if the newly added fileMetadata has
-				// expanded the range. We expand the range immediately for files
-				// we have remaining to check in this loop. All already checked
-				// and unselected files will need to be rechecked via the
-				// restart below.
-				if cmp(smallest, start) < 0 {
-					start = smallest
-					restart = true
-				}
-				if v := cmp(largest, end); v > 0 {
-					end = largest
-					exclusiveEnd = meta.Largest.IsExclusiveSentinel()
-					restart = true
-				} else if v == 0 && exclusiveEnd && !meta.Largest.IsExclusiveSentinel() {
-					// Only update the exclusivity of our existing `end`
-					// bound.
-					exclusiveEnd = false
-					restart = true
-				}
+		for i, meta := 0, l0Iter.First(); meta != nil; i, meta = i+1, l0Iter.Next() {
+			selected := selectedIndices[i]
+			if selected {
+				continue
 			}
+			smallest := meta.Smallest.UserKey
+			largest := meta.Largest.UserKey
+			if c := cmp(largest, start); c < 0 || c == 0 && meta.Largest.IsExclusiveSentinel() {
+				// meta is completely before the specified range; skip it.
+				continue
+			}
+			if c := cmp(smallest, end); c > 0 || c == 0 && exclusiveEnd {
+				// meta is completely after the specified range; skip it.
+				continue
+			}
+			// Overlaps.
+			selectedIndices[i] = true
+			numSelected++
+		}
 
-			if !restart {
-				// Construct a B-Tree containing only the matching items.
-				var tr btree
-				tr.cmp = v.Levels[level].tree.cmp
-				for i, meta := 0, l0Iter.First(); meta != nil; i, meta = i+1, l0Iter.Next() {
-					if selectedIndices[i] {
-						err := tr.insert(meta)
-						if err != nil {
-							panic(err)
-						}
+		{
+			var tr btree
+			tr.cmp = v.Levels[level].tree.cmp
+			for i, meta := 0, l0Iter.First(); meta != nil; i, meta = i+1, l0Iter.Next() {
+				if selectedIndices[i] {
+					err := tr.insert(meta)
+					if err != nil {
+						panic(err)
 					}
 				}
-				slice = LevelSlice{iter: tr.iter(), length: tr.length}
-				// TODO(jackson): Avoid the oddity of constructing and
-				// immediately releasing a B-Tree. Make LevelSlice an
-				// interface?
-				tr.release()
-				break
 			}
-			// Continue looping to retry the files that were not selected.
+			slice = LevelSlice{iter: tr.iter(), length: tr.length}
+			tr.release()
 		}
 		return slice
 	}
